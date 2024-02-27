@@ -495,6 +495,39 @@ mod tests {
     }
 
     #[test]
+    fn end_voting_success() {
+        let mut context = get_context(true);
+        context.signer_account_id = "author.testnet".parse().unwrap();
+        testing_env!(context);
+        let mut contract = Contract::new();
+        contract.add_author("author.testnet".to_string());
+        testing_env!(VMContextBuilder::new()
+            .current_account_id(accounts(0))
+            .signer_account_id("author.testnet".parse().unwrap())
+            .build());
+        contract.submit_data("Test submission for voting".to_string());
+        // Simulate three reviewers committing their votes
+        for i in 0..3 {
+            contract.commit_vote(
+                0,
+                format!("reviewer{}.testnet", i),
+                "accept".to_string(),
+                "secret".to_string(),
+            );
+        }
+        // Capture logs for verifying the end of voting
+        let logs = testing_env_with_logs!(VMContextBuilder::new()
+            .current_account_id(accounts(0))
+            .signer_account_id("author.testnet".parse().unwrap())
+            .build());
+        contract.end_voting(0);
+        assert!(
+            logs.contains(&"Voting ended successfully.".to_string()),
+            "Voting should end successfully with the correct log message."
+        );
+    }
+
+    #[test]
 
     fn submit_data_success() {
         let context = get_context(true); // Simulate call by an author
