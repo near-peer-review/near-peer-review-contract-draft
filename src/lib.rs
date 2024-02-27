@@ -16,7 +16,6 @@ use near_sdk::near_bindgen;
 #[serde(crate = "near_sdk::serde")]
 pub struct Submission {
     author: String,
-    question: String,
     response: String,
 }
 
@@ -106,7 +105,6 @@ impl Contract {
         if self.authors.contains(&env::signer_account_id().to_string()) {
             self.submissions.push(Submission {
                 author: env::signer_account_id().to_string(),
-                question: "Original question not provided".to_string(),
                 response: data,
             });
             log_str("Submission added successfully.");
@@ -203,10 +201,20 @@ mod tests {
             .build());
         contract.add_keywords_to_reviewer(
             "dao-guru.testnet".to_string(),
-            vec!["governance".to_string(), "voting".to_string(), "consensus".to_string()],
+            vec![
+                "governance".to_string(),
+                "voting".to_string(),
+                "consensus".to_string(),
+            ],
         );
-        let reviewer = contract.reviewers.iter().find(|r| r.name == "dao-guru.testnet");
-        assert!(reviewer.is_some() && reviewer.unwrap().keywords == vec!["governance", "voting", "consensus"]);
+        let reviewer = contract
+            .reviewers
+            .iter()
+            .find(|r| r.name == "dao-guru.testnet");
+        assert!(
+            reviewer.is_some()
+                && reviewer.unwrap().keywords == vec!["governance", "voting", "consensus"]
+        );
     }
 
     #[test]
@@ -231,7 +239,10 @@ mod tests {
             "dao-expert.testnet".to_string(),
             vec!["decentralization".to_string()],
         );
-        let reviewer = contract.reviewers.iter().find(|r| r.name == "dao-expert.testnet");
+        let reviewer = contract
+            .reviewers
+            .iter()
+            .find(|r| r.name == "dao-expert.testnet");
         assert!(reviewer.is_none() || reviewer.unwrap().keywords.is_empty()); // Keywords should not be added or reviewer not found
     }
 
@@ -241,15 +252,48 @@ mod tests {
         testing_env!(context);
         let mut contract = Contract::new();
         contract.add_author("author.testnet".to_string()); // Add an author for testing
-        // Simulate the author submitting data
+                                                           // Simulate the author submitting data
         testing_env!(VMContextBuilder::new()
             .current_account_id(accounts(0))
             .signer_account_id("author.testnet".parse().unwrap())
             .build());
-        contract.submit_data("Test data".to_string());
+        contract.submit_data("Prompt: You are voting on a DAO proposal. What do you think of the team behind the proposal?
+
+Example 1: Voter Response
+
+\"I think this team is excellent. They have a great track record in the industry, and I've read their whitepapers outlining their experience with similar projects. Their communication has been clear, and they seem genuinely motivated to improve the DAO.\"
+
+LLM Alignment Analysis: This reasoning demonstrates an understanding of factors relevant to assessing a team's competency and commitment.
+Answer: Yes
+Example 2: Voter Response
+
+\"This team looks great because they all went to top universities. I like that they are always posting on social media, which makes them seem active and engaged.\"
+
+LLM Alignment Analysis: This reasoning focuses on superficial factors that don't necessarily translate into a team's ability to execute a successful proposal.
+Answer: No
+Let me explain why:
+
+Example 1 showcases good alignment because the voter prioritizes relevant metrics like experience, clear communication, and genuine motivation. These qualities are more likely to impact a team's ability to guide a proposal to success.
+Example 2 demonstrates a misalignment because it relies on superficial indicators. University prestige and a social media presence don't guarantee a team's competence or dedication to the DAO's wellbeing.".to_string());
         assert_eq!(contract.submissions.len(), 1); // Verify submission was added
         assert_eq!(contract.submissions[0].author, "author.testnet");
-        assert_eq!(contract.submissions[0].response, "Test data");
-        assert_eq!(contract.submissions[0].question, "Original question not provided");
+        assert_eq!(contract.submissions[0].response, "Prompt: You are voting on a DAO proposal. What do you think of the team behind the proposal?
+
+Example 1: Voter Response
+
+\"I think this team is excellent. They have a great track record in the industry, and I've read their whitepapers outlining their experience with similar projects. Their communication has been clear, and they seem genuinely motivated to improve the DAO.\"
+
+LLM Alignment Analysis: This reasoning demonstrates an understanding of factors relevant to assessing a team's competency and commitment.
+Answer: Yes
+Example 2: Voter Response
+
+\"This team looks great because they all went to top universities. I like that they are always posting on social media, which makes them seem active and engaged.\"
+
+LLM Alignment Analysis: This reasoning focuses on superficial factors that don't necessarily translate into a team's ability to execute a successful proposal.
+Answer: No
+Let me explain why:
+
+Example 1 showcases good alignment because the voter prioritizes relevant metrics like experience, clear communication, and genuine motivation. These qualities are more likely to impact a team's ability to guide a proposal to success.
+Example 2 demonstrates a misalignment because it relies on superficial indicators. University prestige and a social media presence don't guarantee a team's competence or dedication to the DAO's wellbeing.");
     }
 }
