@@ -102,12 +102,12 @@ impl Contract {
     }
 
     // Public method - allows an author to submit data
-    pub fn submit_data(&mut self, question: String, response: String) {
+    pub fn submit_data(&mut self, data: String) {
         if self.authors.contains(&env::signer_account_id().to_string()) {
             self.submissions.push(Submission {
                 author: env::signer_account_id().to_string(),
-                question,
-                response,
+                question: "Original question not provided".to_string(),
+                response: data,
             });
             log_str("Submission added successfully.");
         } else {
