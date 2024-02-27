@@ -1,6 +1,15 @@
 // Find all our documentation at https://docs.near.org
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::env::{self, log_str};
+use near_sdk::serde::{Deserialize, Serialize};
+
+// Define the Reviewer structure
+#[derive(Clone, BorshDeserialize, BorshSerialize, Serialize, Deserialize)]
+#[serde(crate = "near_sdk::serde")]
+pub struct Reviewer {
+    name: String,
+    keywords: Vec<String>,
+}
 use near_sdk::near_bindgen;
 
 // Define the contract structure
@@ -12,7 +21,7 @@ use near_sdk::near_bindgen;
 pub struct Contract {
     license: String,
     authors: Vec<String>,
-    reviewers: Vec<String>,
+    reviewers: Vec<Reviewer>,
 }
 
 // Define the default, which automatically initializes the contract
@@ -53,9 +62,10 @@ impl Contract {
     }
 
     // Public method - adds a reviewer if called by the owner
-    pub fn add_reviewer(&mut self, reviewer: String) {
+    // Updated to accept a reviewer name and keywords
+    pub fn add_reviewer(&mut self, name: String, keywords: Vec<String>) {
         if env::signer_account_id() == env::current_account_id() {
-            self.reviewers.push(reviewer);
+            self.reviewers.push(Reviewer { name, keywords });
             log_str("Reviewer added successfully.");
         } else {
             log_str("Only the contract owner can add reviewers.");
@@ -107,7 +117,7 @@ mod tests {
         let context = get_context(true);
         testing_env!(context);
         let mut contract = Contract::new();
-        contract.add_reviewer("quirky-sand.testnet".to_string());
+        contract.add_reviewer("quirky-sand.testnet".to_string(), vec!["rust".to_string(), "smart contract".to_string()]);
         assert_eq!(contract.reviewers.len(), 1);
         assert_eq!(contract.reviewers[0], "quirky-sand.testnet");
     }
@@ -117,7 +127,7 @@ mod tests {
         let context = get_context(false);
         testing_env!(context);
         let mut contract = Contract::new();
-        contract.add_reviewer("scandalous-note.testnet".to_string());
+        contract.add_reviewer("scandalous-note.testnet".to_string(), vec!["blockchain".to_string()]);
         assert_eq!(contract.reviewers.len(), 0);
     }
 
