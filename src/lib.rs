@@ -147,24 +147,24 @@ impl Contract {
 
     // Public method - allows an author to submit data
     pub fn submit_data(&mut self, data: String) {
-        if self.authors.contains(&env::signer_account_id().to_string()) {
-            let top_reviewers = self.count_keywords_for_all_reviewers(data.clone());
-            let suggested_reviewers: Vec<String> =
-                top_reviewers.into_iter().map(|(name, _)| name).collect();
-            self.submissions.push(Submission {
-                author: env::signer_account_id().to_string(),
-                response: data,
-                suggested_reviewers, // Record the suggested reviewers based on keyword count
-                submission_votes: SubmissionVote {
-                    submission_id: 0, // Assuming a placeholder value; this should be updated according to your logic
-                    vote_commits: Vec::new(),
-                    revealed_votes: HashMap::new(),
-                },
-            });
-            log_str("Submission added successfully.");
-        } else {
-            log_str("Only authors can submit data.");
-        }
+        // if self.authors.contains(&env::signer_account_id().to_string()) {
+        let top_reviewers = self.count_keywords_for_all_reviewers(data.clone());
+        let suggested_reviewers: Vec<String> =
+            top_reviewers.into_iter().map(|(name, _)| name).collect();
+        self.submissions.push(Submission {
+            author: env::signer_account_id().to_string(),
+            response: data,
+            suggested_reviewers, // Record the suggested reviewers based on keyword count
+            submission_votes: SubmissionVote {
+                submission_id: 0, // Assuming a placeholder value; this should be updated according to your logic
+                vote_commits: Vec::new(),
+                revealed_votes: HashMap::new(),
+            },
+        });
+        log_str("Submission added successfully.");
+        // } else {
+        //     log_str("Only authors can submit data.");
+        // }
     }
 
     // Function for reviewers to commit their vote on a submission
