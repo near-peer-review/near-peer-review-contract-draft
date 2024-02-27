@@ -400,10 +400,16 @@ mod tests {
 
     #[test]
     fn commit_vote_success() {
-        let context = get_context(true);
+        let mut context = get_context(true);
+        context.signer_account_id = "author.testnet".parse().unwrap();
         testing_env!(context);
         let mut contract = Contract::new();
         contract.add_author("author.testnet".to_string());
+        // Ensure the author is correctly recognized for submission
+        testing_env!(VMContextBuilder::new()
+            .current_account_id(accounts(0))
+            .signer_account_id("author.testnet".parse().unwrap())
+            .build());
         contract.submit_data("Test submission".to_string());
         contract.commit_vote(
             0,
