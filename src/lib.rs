@@ -399,7 +399,37 @@ mod tests {
     }
 
     #[test]
-    fn submit_data_success() {
+    fn commit_vote_success() {
+        let context = get_context(true);
+        testing_env!(context);
+        let mut contract = Contract::new();
+        contract.add_author("author.testnet".to_string());
+        contract.submit_data("Test submission".to_string());
+        contract.commit_vote(0, "reviewer.testnet".to_string(), "accept".to_string(), "secret".to_string());
+        assert_eq!(contract.submissions[0].submission_votes.vote_commits.len(), 1);
+        assert_eq!(contract.submissions[0].submission_votes.vote_commits[0].reviewer, "reviewer.testnet");
+    }
+
+    #[test]
+    #[should_panic(expected = "Submission not found.")]
+    fn commit_vote_submission_not_found() {
+        let context = get_context(true);
+        testing_env!(context);
+        let mut contract = Contract::new();
+        contract.commit_vote(1, "reviewer.testnet".to_string(), "accept".to_string(), "secret".to_string());
+    }
+
+    #[test]
+    fn commit_vote_duplicate_vote() {
+        let context = get_context(true);
+        testing_env!(context);
+        let mut contract = Contract::new();
+        contract.add_author("author.testnet".to_string());
+        contract.submit_data("Test submission".to_string());
+        contract.commit_vote(0, "reviewer.testnet".to_string(), "accept".to_string(), "secret".to_string());
+        contract.commit_vote(0, "reviewer.testnet".to_string(), "reject".to_string(), "secret".to_string());
+        assert_eq!(contract.submissions[0].submission_votes.vote_commits.len(), 1); // Expecting only one vote commit despite attempting to commit twice
+    }
         let context = get_context(true); // Simulate call by an author
         testing_env!(context);
         let mut contract = Contract::new();
