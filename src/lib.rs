@@ -590,6 +590,9 @@ mod tests {
             "accept".to_string(),
             "secret123".to_string(),
         );
+        // End voting before revealing votes
+        contract.end_voting(0);
+        assert!(contract.submissions[0].voting_ended, "Voting should be marked as ended.");
         contract.reveal_vote(
             0,
             "reviewer1.testnet".to_string(),
@@ -598,7 +601,8 @@ mod tests {
         );
         assert_eq!(
             contract.submissions[0].submission_votes.revealed_votes.get("reviewer1.testnet"),
-            Some(&"accept".to_string())
+            Some(&"accept".to_string()),
+            "Vote should be revealed successfully."
         );
     }
 
@@ -634,6 +638,9 @@ mod tests {
             "accept".to_string(),
             "secret123".to_string(),
         );
+        // End voting before revealing votes
+        contract.end_voting(0);
+        assert!(contract.submissions[0].voting_ended, "Voting should be marked as ended.");
         contract.reveal_vote(
             0,
             "reviewer1.testnet".to_string(),
