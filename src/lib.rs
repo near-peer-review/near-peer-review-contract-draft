@@ -221,7 +221,8 @@ mod tests {
 
     #[test]
     fn add_author_success() {
-        let context = get_context(true);
+        let mut context = get_context(true);
+        context.signer_account_id = "author.testnet".parse().unwrap();
         testing_env!(context);
         let mut contract = Contract::new();
         contract.add_author("snotty-body.testnet".to_string());
