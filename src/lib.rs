@@ -100,11 +100,15 @@ impl Contract {
         self.license = license;
     }
 
-    // Runs count_keywords_in_submission for each reviewer and returns their counts
+    // Runs count_keywords_in_submission for each reviewer, sorts them by count in descending order, and returns the top 3
     pub fn count_keywords_for_all_reviewers(&self, data: String) -> Vec<(String, u32)> {
-        self.reviewers.iter().map(|reviewer| {
+        let mut counts = self.reviewers.iter().map(|reviewer| {
             (reviewer.name.clone(), self.count_keywords_in_submission(data.clone(), reviewer.keywords.clone()))
-        }).collect()
+        }).collect::<Vec<(String, u32)>>();
+        
+        // Sort by count in descending order and take the top 3
+        counts.sort_by(|a, b| b.1.cmp(&a.1));
+        counts.into_iter().take(3).collect()
     }
 
     // Counts the number of keywords in a submission
