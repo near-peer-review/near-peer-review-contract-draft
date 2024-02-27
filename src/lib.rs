@@ -6,14 +6,14 @@ use std::cmp::Reverse;
  use std::collections::{BinaryHeap, HashMap};
  // use sha2::{Sha256, Digest};
 
- #[derive(Clone, Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Clone, BorshDeserialize, BorshSerialize, Serialize, Deserialize, PartialEq, Debug)]
  #[serde(crate = "near_sdk::serde")]
  pub struct VoteCommit {
      reviewer: String,
      commit: String, // Hash of the vote
  }
 
- #[derive(Clone, Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Clone, BorshDeserialize, BorshSerialize, Serialize, Deserialize, PartialEq, Debug)]
  #[serde(crate = "near_sdk::serde")]
  pub struct SubmissionVote {
      submission_id: u64,
@@ -36,6 +36,7 @@ pub struct Submission {
     author: String,
     response: String,
     suggested_reviewers: Vec<String>, // New field to store suggested reviewers
+    submission_votes: SubmissionVote,
 }
 
 // Define the contract structure
@@ -49,6 +50,7 @@ pub struct Contract {
     authors: Vec<String>,
     reviewers: Vec<Reviewer>,
     submissions: Vec<Submission>, // Added submissions vector
+    // submission_votes: Vec<SubmissionVote>, // Added to store votes on submissions
 }
 
 // Define the default, which automatically initializes the contract
