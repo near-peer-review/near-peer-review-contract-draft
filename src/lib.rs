@@ -815,6 +815,43 @@ mod tests {
     }
 
     #[test]
+    fn finalize_submission_success() {
+        let mut context = get_context(true);
+        context.signer_account_id = "author.testnet".parse().unwrap();
+        testing_env!(context);
+        let mut contract = Contract::new();
+        contract.add_author("author.testnet".to_string());
+        testing_env!(VMContextBuilder::new()
+            .current_account_id(accounts(0))
+            .signer_account_id("author.testnet".parse().unwrap())
+            .build());
+        contract.submit_data("Test submission for finalization".to_string());
+        // Simulate three reviewers committing and revealing their votes
+        for i in 0..3 {
+            let reviewer = format!("reviewer{}.testnet", i);
+            contract.commit_vote(
+                0,
+                reviewer.clone(),
+                "accept".to_string(),
+                "secret".to_string(),
+            );
+            contract.reveal_vote(
+                0,
+                reviewer,
+                "accept".to_string(),
+                "secret".to_string(),
+            );
+        }
+        contract.end_voting(0);
+        contract.finalize_submission(0);
+        assert_eq!(
+            contract.submissions[0].accepted,
+            Some(true),
+            "Submission should be accepted."
+        );
+    }
+
+    #[test]
     #[should_panic(expected = "Submission not found.")]
     fn reveal_vote_submission_not_found() {
         let context = get_context(true);
