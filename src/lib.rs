@@ -174,7 +174,7 @@ impl Contract {
                 revealed_comments: HashMap::new(),
             },
             voting_ended: false, // Explicitly initialize the voting_ended flag
-            accepted: None, // Initialize the accepted field as None
+            accepted: None,      // Initialize the accepted field as None
         });
         log_str("Submission added successfully.");
         // } else {
@@ -844,12 +844,7 @@ mod tests {
                 "accept".to_string(),
                 "secret".to_string(),
             );
-            contract.reveal_vote(
-                0,
-                reviewer,
-                "accept".to_string(),
-                "secret".to_string(),
-            );
+            contract.reveal_vote(0, reviewer, "accept".to_string(), "secret".to_string());
         }
         contract.end_voting(0);
         contract.finalize_submission(0);
@@ -871,6 +866,50 @@ mod tests {
             "reviewer1.testnet".to_string(),
             "accept".to_string(),
             "secret123".to_string(),
+        );
+    }
+
+    #[test]
+    fn reveal_vote_incorrect_commit() {
+        let mut context = get_context(true);
+        context.signer_account_id = "reviewer1.testnet".parse().unwrap();
+        testing_env!(context);
+        let mut contract = Contract::new();
+        contract.add_author("author.testnet".to_string());
+        testing_env!(VMContextBuilder::new()
+            .current_account_id(accounts(0))
+            .signer_account_id("author.testnet".parse().unwrap())
+            .build());
+        contract.submit_data("Test submission for incorrect reveal".to_string());
+        // Simulate three reviewers committing their votes
+        for i in 1..4 {
+            contract.commit_vote(
+                0,
+                format!("reviewer{}.testnet", i),
+                "accept".to_string(),
+                "secret123".to_string(),
+            );
+        }
+        // End voting after all reviewers have committed their votes
+        contract.end_voting(0);
+        assert!(
+            contract.submissions[0].voting_ended,
+            "Voting should be marked as ended."
+        );
+        // Now attempt to reveal a vote
+        contract.reveal_vote(
+            0,
+            "reviewer1.testnet".to_string(),
+            "reject".to_string(), // Incorrect vote compared to commit
+            "secret123".to_string(),
+        );
+        assert!(
+            contract.submissions[0]
+                .submission_votes
+                .revealed_votes
+                .get("reviewer1.testnet")
+                .is_none(),
+            "Vote reveal should fail due to incorrect commit."
         );
     }
 
