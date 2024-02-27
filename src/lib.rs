@@ -5,7 +5,9 @@ use near_sdk::near_bindgen;
 
 // Define the contract structure
 #[near_bindgen]
-#[derive(BorshDeserialize, BorshSerialize, near_sdk::serde::Serialize, near_sdk::serde::Deserialize)]
+#[derive(
+    BorshDeserialize, BorshSerialize, near_sdk::serde::Serialize, near_sdk::serde::Deserialize,
+)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Contract {
     license: String,
@@ -36,7 +38,7 @@ impl Contract {
     }
 
     // Public method - returns the license
-    pub fn get_greeting(&self) -> String {
+    pub fn get_license(&self) -> String {
         self.license.clone()
     }
 
@@ -60,9 +62,8 @@ impl Contract {
         }
     }
 
-    // Public method - accepts a greeting, such as "howdy", and records it
-    pub fn set_greeting(&mut self, license: String) {
-        log_str(&format!("Saving greeting: {license}"));
+    pub fn set_license(&mut self, license: String) {
+        log_str(&format!("Saving license: {license}"));
         self.license = license;
     }
 }
@@ -80,9 +81,13 @@ mod tests {
     fn get_context(is_owner: bool) -> VMContext {
         let mut builder = VMContextBuilder::new();
         if is_owner {
-            builder.current_account_id(accounts(0)).signer_account_id(accounts(0));
+            builder
+                .current_account_id(accounts(0))
+                .signer_account_id(accounts(0));
         } else {
-            builder.current_account_id(accounts(0)).signer_account_id(accounts(1));
+            builder
+                .current_account_id(accounts(0))
+                .signer_account_id(accounts(1));
         }
         builder.build()
     }
@@ -126,16 +131,15 @@ mod tests {
     }
 
     #[test]
-    fn get_default_greeting() {
+    fn get_default_license() {
         let contract = Contract::default();
-        // this test did not call set_greeting so should return the default "Hello" greeting
-        assert_eq!(contract.get_greeting(), "CC BY-NC-SA".to_string());
+        assert_eq!(contract.get_license(), "CC BY-NC-SA".to_string());
     }
 
     #[test]
-    fn set_then_get_greeting() {
+    fn set_then_get_license() {
         let mut contract = Contract::default();
-        contract.set_greeting("howdy".to_string());
-        assert_eq!(contract.get_greeting(), "howdy".to_string());
+        contract.set_license("howdy".to_string());
+        assert_eq!(contract.get_license(), "howdy".to_string());
     }
 }
