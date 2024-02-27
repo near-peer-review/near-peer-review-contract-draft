@@ -125,9 +125,12 @@ impl Contract {
     // Public method - allows an author to submit data
     pub fn submit_data(&mut self, data: String) {
         if self.authors.contains(&env::signer_account_id().to_string()) {
+            let top_reviewers = self.count_keywords_for_all_reviewers(data.clone());
+            let suggested_reviewers: Vec<String> = top_reviewers.into_iter().map(|(_, name)| name).collect();
             self.submissions.push(Submission {
                 author: env::signer_account_id().to_string(),
                 response: data,
+                suggested_reviewers, // Record the suggested reviewers based on keyword count
             });
             log_str("Submission added successfully.");
         } else {
@@ -288,16 +291,16 @@ mod tests {
         contract.add_reviewer("reviewer4.testnet".to_string(), vec!["smart contract".to_string(), "web3".to_string()]);
 
         let data = "This submission talks about rust and smart contracts in the context of blockchain and web3.".to_string();
-        // Simulate submitting data and recording the top 3 reviewers as suggested reviewers
-        contract.submit_data(data.clone()); // Assuming submit_data now records suggested reviewers
+        // This part of the test remains unchanged as the modification in submit_data method
+        // now automatically handles the recording of suggested reviewers based on the keyword count.
+        // The assertions below ensure that the submit_data method's new behavior is correctly implemented.
+        contract.submit_data(data.clone());
         let submission = contract.submissions.last().unwrap();
         let suggested_reviewers = &submission.suggested_reviewers;
 
-        // Ensure the suggested reviewers match the top reviewers from count_keywords_for_all_reviewers
+        assert_eq!(suggested_reviewers.len(), 3, "Should have 3 suggested reviewers");
         let top_reviewers = contract.count_keywords_for_all_reviewers(data);
         let top_reviewer_names: Vec<String> = top_reviewers.into_iter().map(|(name, _)| name).collect();
-
-        assert_eq!(suggested_reviewers.len(), 3, "Should have 3 suggested reviewers");
         assert!(suggested_reviewers.iter().all(|reviewer| top_reviewer_names.contains(reviewer)), "All suggested reviewers should be among the top reviewers");
     }
 
