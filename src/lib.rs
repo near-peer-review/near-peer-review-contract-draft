@@ -19,6 +19,7 @@ use near_sdk::near_bindgen;
 pub struct Submission {
     author: String,
     response: String,
+    suggested_reviewers: Vec<String>, // New field to store suggested reviewers
 }
 
 // Define the contract structure
