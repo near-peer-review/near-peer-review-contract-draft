@@ -35,8 +35,9 @@ use near_sdk::near_bindgen;
 pub struct Submission {
     author: String,
     response: String,
-    suggested_reviewers: Vec<String>, // New field to store suggested reviewers
+    suggested_reviewers: Vec<String>,
     submission_votes: SubmissionVote,
+    voting_ended: bool, // Flag to indicate if voting has ended
 }
 
 // Define the contract structure
@@ -212,6 +213,7 @@ impl Contract {
 
         if let Some(submission_vote) = submission_vote {
             if submission_vote.submission_votes.vote_commits.len() == 3 {
+                submission_vote.voting_ended = true; // Mark voting as ended
                 log_str("Voting ended successfully.");
             } else {
                 log_str("Not all reviewers have committed their votes.");
@@ -522,8 +524,7 @@ mod tests {
             .signer_account_id("author.testnet".parse().unwrap())
             .build());
         contract.end_voting(0);
-        // Asserting specific log messages is not demonstrated here due to limitations
-        // It's recommended to check the state changes or outcomes that can be verified
+        assert!(contract.submissions[0].voting_ended, "Voting should be marked as ended.");
     }
 
     #[test]
