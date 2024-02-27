@@ -74,7 +74,7 @@ impl Contract {
 
     // Public method - allows a reviewer to add keywords to themselves
     pub fn add_keywords_to_reviewer(&mut self, name: String, new_keywords: Vec<String>) {
-        if env::signer_account_id() == name {
+        if env::signer_account_id() == name.parse().unwrap() {
             if let Some(reviewer) = self.reviewers.iter_mut().find(|r| r.name == name) {
                 reviewer.keywords.extend(new_keywords);
                 log_str("Keywords added successfully.");
