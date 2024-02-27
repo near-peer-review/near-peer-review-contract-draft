@@ -179,16 +179,13 @@ impl Contract {
         let hash = Sha256::digest(combined.as_bytes());
         let commit = format!("{:x}", hash);
 
-        if let Some(submission_vote) = self
-            .submissions
-            .iter_mut()
-            .find(|sub| sub.submission_votes.submission_id == submission_id)
-        {
-            submission_vote
-                .submission_votes
-                .vote_commits
-                .push(VoteCommit { reviewer, commit });
-            log_str("Vote committed successfully.");
+        if let Some(submission_vote) = self.submissions.iter_mut().find(|sub| sub.submission_votes.submission_id == submission_id) {
+            if submission_vote.submission_votes.vote_commits.iter().any(|vc| vc.reviewer == reviewer) {
+                log_str("Duplicate vote commit detected. Vote not committed.");
+            } else {
+                submission_vote.submission_votes.vote_commits.push(VoteCommit { reviewer, commit });
+                log_str("Vote committed successfully.");
+            }
         } else {
             env::panic_str("Submission not found.");
         }
