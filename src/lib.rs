@@ -8,23 +8,36 @@ use near_sdk::near_bindgen;
 #[derive(BorshDeserialize, BorshSerialize)]
 pub struct Contract {
     license: String,
+    authors: Vec<String>,
 }
 
 // Define the default, which automatically initializes the contract
-impl Default for Contract {
-    fn default() -> Self {
-        Self {
-            license: "CC BY-NC-SA".to_string(),
-        }
-    }
-}
+// This block is removed as we now use `new` for initialization.
 
 // Implement the contract structure
 #[near_bindgen]
 impl Contract {
-    // Public method - returns the greeting saved, defaulting to DEFAULT_GREETING
+    // Initialize the authors list as empty
+    pub fn new() -> Self {
+        Self {
+            license: "CC BY-NC-SA".to_string(),
+            authors: Vec::new(),
+        }
+    }
+
+    // Public method - returns the license
     pub fn get_greeting(&self) -> String {
-        return self.license.clone();
+        self.license.clone()
+    }
+
+    // Public method - adds an author if called by the owner
+    pub fn add_author(&mut self, author: String) {
+        if env::signer_account_id() == env::current_account_id() {
+            self.authors.push(author);
+            log_str("Author added successfully.");
+        } else {
+            log_str("Only the contract owner can add authors.");
+        }
     }
 
     // Public method - accepts a greeting, such as "howdy", and records it
