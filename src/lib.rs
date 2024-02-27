@@ -100,6 +100,11 @@ impl Contract {
         self.license = license;
     }
 
+    // Counts the number of keywords in a submission
+    pub fn count_keywords_in_submission(&self, data: String, keywords: Vec<String>) -> u32 {
+        keywords.iter().filter(|&keyword| data.contains(keyword)).count() as u32
+    }
+
     // Public method - allows an author to submit data
     pub fn submit_data(&mut self, data: String) {
         if self.authors.contains(&env::signer_account_id().to_string()) {
