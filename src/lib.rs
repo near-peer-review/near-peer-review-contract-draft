@@ -707,6 +707,81 @@ mod tests {
     }
 
     #[test]
+    fn commit_comment_success() {
+        let mut context = get_context(true);
+        context.signer_account_id = "reviewer1.testnet".parse().unwrap();
+        testing_env!(context);
+        let mut contract = Contract::new();
+        contract.add_author("author.testnet".to_string());
+        testing_env!(VMContextBuilder::new()
+            .current_account_id(accounts(0))
+            .signer_account_id("author.testnet".parse().unwrap())
+            .build());
+        contract.submit_data("Test submission for comment".to_string());
+        contract.commit_comment(
+            0,
+            "reviewer1.testnet".to_string(),
+            "Great proposal".to_string(),
+            "secret123".to_string(),
+        );
+        assert_eq!(
+            contract.submissions[0].submission_votes.comment_commits.len(),
+            1,
+            "Comment should be committed successfully."
+        );
+    }
+
+    #[test]
+    fn reveal_comment_success() {
+        let mut context = get_context(true);
+        context.signer_account_id = "reviewer1.testnet".parse().unwrap();
+        testing_env!(context);
+        let mut contract = Contract::new();
+        contract.add_author("author.testnet".to_string());
+        testing_env!(VMContextBuilder::new()
+            .current_account_id(accounts(0))
+            .signer_account_id("author.testnet".parse().unwrap())
+            .build());
+        contract.submit_data("Test submission for reveal comment".to_string());
+        contract.commit_comment(
+            0,
+            "reviewer1.testnet".to_string(),
+            "Insightful analysis".to_string(),
+            "secret123".to_string(),
+        );
+        // Simulate three reviewers committing their votes
+        for i in 1..4 {
+            contract.commit_vote(
+                0,
+                format!("reviewer{}.testnet", i),
+                "accept".to_string(),
+                "secret123".to_string(),
+            );
+        }
+        // End voting after all reviewers have committed their votes
+        contract.end_voting(0);
+        assert!(
+            contract.submissions[0].voting_ended,
+            "Voting should be marked as ended."
+        );
+        // Now attempt to reveal a comment
+        contract.reveal_comment(
+            0,
+            "reviewer1.testnet".to_string(),
+            "Insightful analysis".to_string(),
+            "secret123".to_string(),
+        );
+        assert_eq!(
+            contract.submissions[0]
+                .submission_votes
+                .revealed_comments
+                .get("reviewer1.testnet"),
+            Some(&"Insightful analysis".to_string()),
+            "Comment should be revealed successfully."
+        );
+    }
+
+    #[test]
     #[should_panic(expected = "Submission not found.")]
     fn reveal_vote_submission_not_found() {
         let context = get_context(true);
