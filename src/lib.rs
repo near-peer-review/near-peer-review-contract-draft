@@ -296,26 +296,6 @@ mod tests {
 
     #[test]
     fn test_count_keywords_for_all_reviewers() {
-        // let mut context = get_context(true);
-        // context.signer_account_id = "author.testnet".parse().unwrap();
-        // testing_env!(context);
-        // let mut contract = Contract::new();
-        // contract.add_author("author.testnet".to_string()); // Ensure an author is added before submitting
-        // contract.add_reviewer(
-        //     "reviewer1.testnet".to_string(),
-        //     vec!["rust".to_string(), "smart contract".to_string()],
-        // );
-        // contract.add_reviewer(
-        //     "reviewer2.testnet".to_string(),
-        //     vec!["blockchain".to_string(), "web3".to_string()],
-        // );
-        // contract.add_reviewer("reviewer3.testnet".to_string(), vec!["rust".to_string()]);
-        // contract.add_reviewer(
-        //     "reviewer4.testnet".to_string(),
-        //     vec!["smart contract".to_string(), "web3".to_string()],
-        // );
-
-        // let data = "This submission talks about rust and smart contracts in the context of blockchain and web3.".to_string();
         let context = get_context(true); // Simulate call by an author
         testing_env!(context);
         let mut contract = Contract::new();
@@ -349,11 +329,11 @@ mod tests {
         let submission = contract.submissions.last().unwrap();
         let suggested_reviewers = &submission.suggested_reviewers;
 
-        // assert_eq!(
-        //     suggested_reviewers.len(),
-        //     3,
-        //     "Should have 3 suggested reviewers"
-        // );
+        assert_eq!(
+            suggested_reviewers.len(),
+            3,
+            "Should have 3 suggested reviewers"
+        );
         let top_reviewers = contract.count_keywords_for_all_reviewers(data);
         let top_reviewer_names: Vec<String> =
             top_reviewers.into_iter().map(|(name, _)| name).collect();
