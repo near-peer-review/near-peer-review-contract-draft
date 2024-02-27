@@ -5,7 +5,8 @@ use near_sdk::near_bindgen;
 
 // Define the contract structure
 #[near_bindgen]
-#[derive(BorshDeserialize, BorshSerialize)]
+#[derive(BorshDeserialize, BorshSerialize, near_sdk::serde::Serialize, near_sdk::serde::Deserialize)]
+#[serde(crate = "near_sdk::serde")]
 pub struct Contract {
     license: String,
     authors: Vec<String>,
