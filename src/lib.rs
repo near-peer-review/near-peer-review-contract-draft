@@ -190,7 +190,7 @@ impl Contract {
                 .push(VoteCommit { reviewer, commit });
             log_str("Vote committed successfully.");
         } else {
-            log_str("Submission not found.");
+            env::panic_str("Submission not found.");
         }
     }
 }
