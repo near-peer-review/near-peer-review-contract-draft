@@ -14,7 +14,7 @@ pub struct Contract {
 impl Default for Contract {
     fn default() -> Self {
         Self {
-            license: "iiiiiiinnnn".to_string(),
+            license: "CC BY-NC-SA".to_string(),
         }
     }
 }
@@ -46,7 +46,7 @@ mod tests {
     fn get_default_greeting() {
         let contract = Contract::default();
         // this test did not call set_greeting so should return the default "Hello" greeting
-        assert_eq!(contract.get_greeting(), "iiiiiiinnnn".to_string());
+        assert_eq!(contract.get_greeting(), "CC BY-NC-SA".to_string());
     }
 
     #[test]
