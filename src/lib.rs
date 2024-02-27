@@ -11,6 +11,20 @@ use std::collections::{BinaryHeap, HashMap};
 pub struct VoteCommit {
     reviewer: String,
     commit: String, // Hash of the vote
+    // Function to end voting on a submission
+    pub fn end_voting(&mut self, submission_id: u64) {
+        let submission_vote = self.submissions.iter_mut().find(|sub| sub.submission_votes.submission_id == submission_id);
+
+        if let Some(submission_vote) = submission_vote {
+            if submission_vote.submission_votes.vote_commits.len() == 3 {
+                log_str("Voting ended successfully.");
+            } else {
+                log_str("Not all reviewers have committed their votes.");
+            }
+        } else {
+            env::panic_str("Submission not found.");
+        }
+    }
 }
 
 #[derive(Clone, BorshDeserialize, BorshSerialize, Serialize, Deserialize, PartialEq, Debug)]
