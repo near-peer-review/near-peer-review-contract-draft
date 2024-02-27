@@ -307,6 +307,15 @@ impl Contract {
             env::panic_str("Submission not found.");
         }
     }
+    // Function to return the data of submissions that have been accepted
+    pub fn get_accepted_submissions(&self) -> Vec<String> {
+        self.submissions
+            .iter()
+            .filter(|submission| submission.accepted == Some(true))
+            .map(|submission| submission.response.clone())
+            .collect()
+    }
+
     // Function for reviewers to reveal their comment on a submission
     pub fn reveal_comment(
         &mut self,
