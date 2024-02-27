@@ -3,7 +3,23 @@ use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::env::{self, log_str};
 use near_sdk::serde::{Deserialize, Serialize};
 use std::cmp::Reverse;
-use std::collections::BinaryHeap;
+ use std::collections::{BinaryHeap, HashMap};
+ // use sha2::{Sha256, Digest};
+
+ #[derive(Clone, Serialize, Deserialize, PartialEq, Debug)]
+ #[serde(crate = "near_sdk::serde")]
+ pub struct VoteCommit {
+     reviewer: String,
+     commit: String, // Hash of the vote
+ }
+
+ #[derive(Clone, Serialize, Deserialize, PartialEq, Debug)]
+ #[serde(crate = "near_sdk::serde")]
+ pub struct SubmissionVote {
+     submission_id: u64,
+     vote_commits: Vec<VoteCommit>,
+     revealed_votes: HashMap<String, String>, // Maps reviewer names to their votes ("accept" or "reject")
+ }
 
 // Define the Reviewer structure
 #[derive(Clone, BorshDeserialize, BorshSerialize, Serialize, Deserialize, PartialEq, Debug)]
