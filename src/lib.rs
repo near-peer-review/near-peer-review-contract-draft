@@ -4,7 +4,7 @@ use near_sdk::env::{self, log_str};
 use near_sdk::serde::{Deserialize, Serialize};
 
 // Define the Reviewer structure
-#[derive(Clone, BorshDeserialize, BorshSerialize, Serialize, Deserialize)]
+#[derive(Clone, BorshDeserialize, BorshSerialize, Serialize, Deserialize, PartialEq, Debug)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Reviewer {
     name: String,
@@ -119,7 +119,7 @@ mod tests {
         let mut contract = Contract::new();
         contract.add_reviewer("quirky-sand.testnet".to_string(), vec!["rust".to_string(), "smart contract".to_string()]);
         assert_eq!(contract.reviewers.len(), 1);
-        assert_eq!(contract.reviewers[0], "quirky-sand.testnet");
+        assert_eq!(contract.reviewers[0].name, "quirky-sand.testnet");
     }
 
     #[test]
