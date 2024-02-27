@@ -15,10 +15,19 @@ pub struct VoteCommit {
 
 #[derive(Clone, BorshDeserialize, BorshSerialize, Serialize, Deserialize, PartialEq, Debug)]
 #[serde(crate = "near_sdk::serde")]
+pub struct CommentCommit {
+    reviewer: String,
+    commit: String, // Hash of the comment
+}
+
+#[derive(Clone, BorshDeserialize, BorshSerialize, Serialize, Deserialize, PartialEq, Debug)]
+#[serde(crate = "near_sdk::serde")]
 pub struct SubmissionVote {
     submission_id: u64,
     vote_commits: Vec<VoteCommit>,
     revealed_votes: HashMap<String, String>, // Maps reviewer names to their votes ("accept" or "reject")
+    comment_commits: Vec<CommentCommit>, // Holds commits for comments
+    revealed_comments: HashMap<String, String>, // Maps reviewer names to their comments
 }
 
 // Define the Reviewer structure
@@ -717,5 +726,74 @@ Let me explain why:
 
 Example 1 showcases good alignment because the voter prioritizes relevant metrics like experience, clear communication, and genuine motivation. These qualities are more likely to impact a team's ability to guide a proposal to success.
 Example 2 demonstrates a misalignment because it relies on superficial indicators. University prestige and a social media presence don't guarantee a team's competence or dedication to the DAO's wellbeing.");
+    }
+}
+// Function for reviewers to commit their comment on a submission
+pub fn commit_comment(
+    &mut self,
+    submission_id: u64,
+    reviewer: String,
+    comment: String,
+    secret: String,
+) {
+    let combined = format!("{}{}", comment, secret);
+    let hash = Sha256::digest(combined.as_bytes());
+    let commit = format!("{:x}", hash);
+
+    if let Some(submission_vote) = self
+        .submissions
+        .iter_mut()
+        .find(|sub| sub.submission_votes.submission_id == submission_id)
+    {
+        submission_vote
+            .submission_votes
+            .comment_commits
+            .push(CommentCommit { reviewer, commit });
+        log_str("Comment committed successfully.");
+    } else {
+        env::panic_str("Submission not found.");
+    }
+}
+// Function for reviewers to reveal their comment on a submission
+pub fn reveal_comment(
+    &mut self,
+    submission_id: u64,
+    reviewer: String,
+    comment: String,
+    secret: String,
+) {
+    let combined = format!("{}{}", comment, secret);
+    let hash = Sha256::digest(combined.as_bytes());
+    let commit = format!("{:x}", hash);
+
+    if let Some(submission) = self
+        .submissions
+        .iter_mut()
+        .find(|sub| sub.submission_votes.submission_id == submission_id)
+    {
+        if submission.voting_ended {
+            if let Some(comment_commit) = submission
+                .submission_votes
+                .comment_commits
+                .iter()
+                .find(|cc| cc.reviewer == reviewer)
+            {
+                if comment_commit.commit == commit {
+                    submission
+                        .submission_votes
+                        .revealed_comments
+                        .insert(reviewer, comment);
+                    log_str("Comment revealed successfully.");
+                } else {
+                    log_str("Comment reveal failed: Commit does not match.");
+                }
+            } else {
+                log_str("Comment commit not found for reviewer.");
+            }
+        } else {
+            log_str("Voting has not ended yet.");
+        }
+    } else {
+        env::panic_str("Submission not found.");
     }
 }
