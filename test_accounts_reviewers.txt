@@ -1,0 +1,4 @@
+quirky-sand.testnet
+scandalous-note.testnet
+brainy-digestion.testnet
+mellow-flag.testnet

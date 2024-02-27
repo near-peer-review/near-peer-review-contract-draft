@@ -1,0 +1,2 @@
+snotty-body.testnet
+dispensable-animal.testnet
