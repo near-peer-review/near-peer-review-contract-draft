@@ -10,6 +10,7 @@ use near_sdk::near_bindgen;
 pub struct Contract {
     license: String,
     authors: Vec<String>,
+    reviewers: Vec<String>,
 }
 
 // Define the default, which automatically initializes the contract
@@ -48,6 +49,16 @@ impl Contract {
         }
     }
 
+    // Public method - adds a reviewer if called by the owner
+    pub fn add_reviewer(&mut self, reviewer: String) {
+        if env::signer_account_id() == env::current_account_id() {
+            self.reviewers.push(reviewer);
+            log_str("Reviewer added successfully.");
+        } else {
+            log_str("Only the contract owner can add reviewers.");
+        }
+    }
+
     // Public method - accepts a greeting, such as "howdy", and records it
     pub fn set_greeting(&mut self, license: String) {
         log_str(&format!("Saving greeting: {license}"));
@@ -83,6 +94,25 @@ mod tests {
         contract.add_author("snotty-body.testnet".to_string());
         assert_eq!(contract.authors.len(), 1);
         assert_eq!(contract.authors[0], "snotty-body.testnet");
+    }
+
+    #[test]
+    fn add_reviewer_success() {
+        let context = get_context(true);
+        testing_env!(context);
+        let mut contract = Contract::new();
+        contract.add_reviewer("quirky-sand.testnet".to_string());
+        assert_eq!(contract.reviewers.len(), 1);
+        assert_eq!(contract.reviewers[0], "quirky-sand.testnet");
+    }
+
+    #[test]
+    fn add_reviewer_only_owner() {
+        let context = get_context(false);
+        testing_env!(context);
+        let mut contract = Contract::new();
+        contract.add_reviewer("scandalous-note.testnet".to_string());
+        assert_eq!(contract.reviewers.len(), 0);
     }
 
     #[test]
