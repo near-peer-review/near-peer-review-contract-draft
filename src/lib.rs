@@ -174,6 +174,7 @@ impl Contract {
                 revealed_comments: HashMap::new(),
             },
             voting_ended: false, // Explicitly initialize the voting_ended flag
+            accepted: None, // Initialize the accepted field as None
         });
         log_str("Submission added successfully.");
         // } else {
