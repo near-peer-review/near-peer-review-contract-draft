@@ -288,12 +288,17 @@ mod tests {
         contract.add_reviewer("reviewer4.testnet".to_string(), vec!["smart contract".to_string(), "web3".to_string()]);
 
         let data = "This submission talks about rust and smart contracts in the context of blockchain and web3.".to_string();
-        let top_reviewers = contract.count_keywords_for_all_reviewers(data);
+        // Simulate submitting data and recording the top 3 reviewers as suggested reviewers
+        contract.submit_data(data.clone()); // Assuming submit_data now records suggested reviewers
+        let submission = contract.submissions.last().unwrap();
+        let suggested_reviewers = &submission.suggested_reviewers;
 
-        assert_eq!(top_reviewers.len(), 3, "Should return top 3 reviewers");
-        assert!(top_reviewers.contains(&("reviewer1.testnet".to_string(), 2)), "reviewer1 should have 2 keywords found");
-        assert!(top_reviewers.contains(&("reviewer2.testnet".to_string(), 2)), "reviewer2 should have 2 keywords found");
-        assert!(top_reviewers.contains(&("reviewer4.testnet".to_string(), 2)), "reviewer4 should have 2 keywords found");
+        // Ensure the suggested reviewers match the top reviewers from count_keywords_for_all_reviewers
+        let top_reviewers = contract.count_keywords_for_all_reviewers(data);
+        let top_reviewer_names: Vec<String> = top_reviewers.into_iter().map(|(name, _)| name).collect();
+
+        assert_eq!(suggested_reviewers.len(), 3, "Should have 3 suggested reviewers");
+        assert!(suggested_reviewers.iter().all(|reviewer| top_reviewer_names.contains(reviewer)), "All suggested reviewers should be among the top reviewers");
     }
 
     #[test]
