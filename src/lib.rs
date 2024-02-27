@@ -252,6 +252,15 @@ mod tests {
     }
 
     #[test]
+    fn test_count_keywords_in_submission() {
+        let contract = Contract::new();
+        let data = "This is a test submission containing keywords such as Rust, Blockchain, and Smart Contract.".to_string();
+        let keywords = vec!["Rust".to_string(), "Blockchain".to_string(), "Smart Contract".to_string(), "Web3".to_string()];
+        let count = contract.count_keywords_in_submission(data, keywords);
+        assert_eq!(count, 3, "The count of keywords in the submission should be 3.");
+    }
+
+    #[test]
     fn submit_data_success() {
         let context = get_context(true); // Simulate call by an author
         testing_env!(context);
