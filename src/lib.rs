@@ -580,3 +580,42 @@ Example 1 showcases good alignment because the voter prioritizes relevant metric
 Example 2 demonstrates a misalignment because it relies on superficial indicators. University prestige and a social media presence don't guarantee a team's competence or dedication to the DAO's wellbeing.");
     }
 }
+    // Function for reviewers to reveal their vote on a submission
+    pub fn reveal_vote(
+        &mut self,
+        submission_id: u64,
+        reviewer: String,
+        vote: String,
+        secret: String,
+    ) {
+        let combined = format!("{}{}", vote, secret);
+        let hash = Sha256::digest(combined.as_bytes());
+        let commit = format!("{:x}", hash);
+
+        if let Some(submission_vote) = self
+            .submissions
+            .iter_mut()
+            .find(|sub| sub.submission_votes.submission_id == submission_id)
+        {
+            if let Some(vote_commit) = submission_vote
+                .submission_votes
+                .vote_commits
+                .iter()
+                .find(|vc| vc.reviewer == reviewer)
+            {
+                if vote_commit.commit == commit {
+                    submission_vote
+                        .submission_votes
+                        .revealed_votes
+                        .insert(reviewer, vote);
+                    log_str("Vote revealed successfully.");
+                } else {
+                    log_str("Vote reveal failed: Commit does not match.");
+                }
+            } else {
+                log_str("Vote commit not found for reviewer.");
+            }
+        } else {
+            env::panic_str("Submission not found.");
+        }
+    }
