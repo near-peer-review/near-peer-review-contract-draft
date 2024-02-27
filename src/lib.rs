@@ -319,6 +319,9 @@ mod tests {
             vec!["smart contract".to_string(), "web3".to_string()],
         );
 
+        // Verify the number of reviewers added
+        assert_eq!(contract.reviewers.len(), 4, "Should have 4 reviewers added");
+
         let data = "This submission talks about rust and smart contracts in the context of blockchain and web3.".to_string();
         // This part of the test remains unchanged as the modification in submit_data method
         // now automatically handles the recording of suggested reviewers based on the keyword count.
