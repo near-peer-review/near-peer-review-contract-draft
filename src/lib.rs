@@ -14,6 +14,13 @@ pub struct Contract {
 // Define the default, which automatically initializes the contract
 // This block is removed as we now use `new` for initialization.
 
+// Implement the Default trait for Contract
+impl Default for Contract {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 // Implement the contract structure
 #[near_bindgen]
 impl Contract {
