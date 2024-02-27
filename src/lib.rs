@@ -31,6 +31,7 @@ impl Contract {
         Self {
             license: "CC BY-NC-SA".to_string(),
             authors: Vec::new(),
+            reviewers: Vec::new(),
         }
     }
 
