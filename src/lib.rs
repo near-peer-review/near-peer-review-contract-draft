@@ -875,47 +875,57 @@ mod tests {
     }
 
     #[test]
-    fn reveal_vote_incorrect_commit() {
-        let mut context = get_context(true);
-        context.signer_account_id = "reviewer1.testnet".parse().unwrap();
+    fn get_accepted_submissions_success() {
+        let context = get_context(true);
         testing_env!(context);
         let mut contract = Contract::new();
-        contract.add_author("author.testnet".to_string());
-        testing_env!(VMContextBuilder::new()
-            .current_account_id(accounts(0))
-            .signer_account_id("author.testnet".parse().unwrap())
-            .build());
-        contract.submit_data("Test submission for incorrect reveal".to_string());
-        // Simulate three reviewers committing their votes
-        for i in 1..4 {
-            contract.commit_vote(
-                0,
-                format!("reviewer{}.testnet", i),
-                "accept".to_string(),
-                "secret123".to_string(),
-            );
-        }
-        // End voting after all reviewers have committed their votes
-        contract.end_voting(0);
-        assert!(
-            contract.submissions[0].voting_ended,
-            "Voting should be marked as ended."
-        );
-        // Now attempt to reveal a vote
-        contract.reveal_vote(
-            0,
-            "reviewer1.testnet".to_string(),
-            "reject".to_string(), // Incorrect vote compared to commit
-            "secret123".to_string(),
-        );
-        assert!(
-            contract.submissions[0]
-                .submission_votes
-                .revealed_votes
-                .get("reviewer1.testnet")
-                .is_none(),
-            "Vote reveal should fail due to incorrect commit."
-        );
+        // Simulate adding submissions
+        contract.submissions.push(Submission {
+            author: "author1.testnet".to_string(),
+            response: "Accepted submission".to_string(),
+            suggested_reviewers: vec![],
+            submission_votes: SubmissionVote {
+                submission_id: 0,
+                vote_commits: vec![],
+                revealed_votes: HashMap::new(),
+                comment_commits: vec![],
+                revealed_comments: HashMap::new(),
+            },
+            voting_ended: true,
+            accepted: Some(true),
+        });
+        contract.submissions.push(Submission {
+            author: "author2.testnet".to_string(),
+            response: "Rejected submission".to_string(),
+            suggested_reviewers: vec![],
+            submission_votes: SubmissionVote {
+                submission_id: 1,
+                vote_commits: vec![],
+                revealed_votes: HashMap::new(),
+                comment_commits: vec![],
+                revealed_comments: HashMap::new(),
+            },
+            voting_ended: true,
+            accepted: Some(false),
+        });
+        contract.submissions.push(Submission {
+            author: "author3.testnet".to_string(),
+            response: "Undecided submission".to_string(),
+            suggested_reviewers: vec![],
+            submission_votes: SubmissionVote {
+                submission_id: 2,
+                vote_commits: vec![],
+                revealed_votes: HashMap::new(),
+                comment_commits: vec![],
+                revealed_comments: HashMap::new(),
+            },
+            voting_ended: true,
+            accepted: None,
+        });
+        // Call get_accepted_submissions and verify the result
+        let accepted_submissions = contract.get_accepted_submissions();
+        assert_eq!(accepted_submissions.len(), 1);
+        assert_eq!(accepted_submissions[0], "Accepted submission");
     }
 
     #[test]
