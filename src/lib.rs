@@ -236,28 +236,32 @@ impl Contract {
         let hash = Sha256::digest(combined.as_bytes());
         let commit = format!("{:x}", hash);
 
-        if let Some(submission_vote) = self
+        if let Some(submission) = self
             .submissions
             .iter_mut()
             .find(|sub| sub.submission_votes.submission_id == submission_id)
         {
-            if let Some(vote_commit) = submission_vote
-                .submission_votes
-                .vote_commits
-                .iter()
-                .find(|vc| vc.reviewer == reviewer)
-            {
-                if vote_commit.commit == commit {
-                    submission_vote
-                        .submission_votes
-                        .revealed_votes
-                        .insert(reviewer, vote);
-                    log_str("Vote revealed successfully.");
+            if submission.voting_ended {
+                if let Some(vote_commit) = submission
+                    .submission_votes
+                    .vote_commits
+                    .iter()
+                    .find(|vc| vc.reviewer == reviewer)
+                {
+                    if vote_commit.commit == commit {
+                        submission
+                            .submission_votes
+                            .revealed_votes
+                            .insert(reviewer, vote);
+                        log_str("Vote revealed successfully.");
+                    } else {
+                        log_str("Vote reveal failed: Commit does not match.");
+                    }
                 } else {
-                    log_str("Vote reveal failed: Commit does not match.");
+                    log_str("Vote commit not found for reviewer.");
                 }
             } else {
-                log_str("Vote commit not found for reviewer.");
+                log_str("Voting has not ended yet.");
             }
         } else {
             env::panic_str("Submission not found.");
