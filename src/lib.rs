@@ -4,7 +4,7 @@ use near_sdk::env::{self, log_str};
 use near_sdk::serde::{Deserialize, Serialize};
 use std::cmp::Reverse;
  use std::collections::{BinaryHeap, HashMap};
- // use sha2::{Sha256, Digest};
+ use sha2::{Sha256, Digest};
 
 #[derive(Clone, BorshDeserialize, BorshSerialize, Serialize, Deserialize, PartialEq, Debug)]
  #[serde(crate = "near_sdk::serde")]
@@ -422,3 +422,19 @@ Example 1 showcases good alignment because the voter prioritizes relevant metric
 Example 2 demonstrates a misalignment because it relies on superficial indicators. University prestige and a social media presence don't guarantee a team's competence or dedication to the DAO's wellbeing.");
     }
 }
+    // Function for reviewers to commit their vote on a submission
+    pub fn commit_vote(&mut self, submission_id: u64, reviewer: String, vote: String, secret: String) {
+        let combined = format!("{}{}", vote, secret);
+        let hash = Sha256::digest(combined.as_bytes());
+        let commit = format!("{:x}", hash);
+
+        if let Some(submission_vote) = self.submissions.iter_mut().find(|sub| sub.submission_votes.submission_id == submission_id) {
+            submission_vote.submission_votes.vote_commits.push(VoteCommit {
+                reviewer,
+                commit,
+            });
+            log_str("Vote committed successfully.");
+        } else {
+            log_str("Submission not found.");
+        }
+    }
