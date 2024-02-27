@@ -52,6 +52,7 @@ impl Contract {
             license: "CC BY-NC-SA".to_string(),
             authors: Vec::new(),
             reviewers: Vec::new(),
+            submissions: Vec::new(), // Initialize submissions vector
         }
     }
 
@@ -102,9 +103,9 @@ impl Contract {
 
     // Public method - allows an author to submit data
     pub fn submit_data(&mut self, question: String, response: String) {
-        if self.authors.contains(&env::signer_account_id()) {
+        if self.authors.contains(&env::signer_account_id().to_string()) {
             self.submissions.push(Submission {
-                author: env::signer_account_id(),
+                author: env::signer_account_id().to_string(),
                 question,
                 response,
             });
