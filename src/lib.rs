@@ -296,9 +296,11 @@ mod tests {
 
     #[test]
     fn test_count_keywords_for_all_reviewers() {
-        let context = get_context(true);
+        let mut context = get_context(true);
+        context.signer_account_id = "author.testnet".parse().unwrap();
         testing_env!(context);
         let mut contract = Contract::new();
+        contract.add_author("author.testnet".to_string()); // Ensure an author is added before submitting
         contract.add_reviewer(
             "reviewer1.testnet".to_string(),
             vec!["rust".to_string(), "smart contract".to_string()],
