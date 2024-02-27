@@ -72,6 +72,20 @@ impl Contract {
         }
     }
 
+    // Public method - allows a reviewer to add keywords to themselves
+    pub fn add_keywords_to_reviewer(&mut self, name: String, new_keywords: Vec<String>) {
+        if env::signer_account_id() == name {
+            if let Some(reviewer) = self.reviewers.iter_mut().find(|r| r.name == name) {
+                reviewer.keywords.extend(new_keywords);
+                log_str("Keywords added successfully.");
+            } else {
+                log_str("Reviewer not found.");
+            }
+        } else {
+            log_str("Only the reviewer can add keywords to themselves.");
+        }
+    }
+
     pub fn set_license(&mut self, license: String) {
         log_str(&format!("Saving license: {license}"));
         self.license = license;
@@ -117,7 +131,10 @@ mod tests {
         let context = get_context(true);
         testing_env!(context);
         let mut contract = Contract::new();
-        contract.add_reviewer("quirky-sand.testnet".to_string(), vec!["rust".to_string(), "smart contract".to_string()]);
+        contract.add_reviewer(
+            "quirky-sand.testnet".to_string(),
+            vec!["rust".to_string(), "smart contract".to_string()],
+        );
         assert_eq!(contract.reviewers.len(), 1);
         assert_eq!(contract.reviewers[0].name, "quirky-sand.testnet");
     }
@@ -127,7 +144,10 @@ mod tests {
         let context = get_context(false);
         testing_env!(context);
         let mut contract = Contract::new();
-        contract.add_reviewer("scandalous-note.testnet".to_string(), vec!["blockchain".to_string()]);
+        contract.add_reviewer(
+            "scandalous-note.testnet".to_string(),
+            vec!["blockchain".to_string()],
+        );
         assert_eq!(contract.reviewers.len(), 0);
     }
 
