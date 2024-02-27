@@ -46,7 +46,7 @@ pub struct Submission {
     response: String,
     suggested_reviewers: Vec<String>,
     submission_votes: SubmissionVote,
-    voting_ended: bool, // Flag to indicate if voting has ended
+    voting_ended: bool,     // Flag to indicate if voting has ended
     accepted: Option<bool>, // New field to indicate if the submission is accepted or rejected
 }
 
@@ -341,6 +341,34 @@ impl Contract {
                     }
                 } else {
                     log_str("Comment commit not found for reviewer.");
+                }
+            } else {
+                log_str("Voting has not ended yet.");
+            }
+        } else {
+            env::panic_str("Submission not found.");
+        }
+    }
+
+    // Function to finalize the submission after all votes are revealed
+    // This function checks if all reviewers voted to accept and sets the submission's accepted flag accordingly
+    pub fn finalize_submission(&mut self, submission_id: u64) {
+        let submission = self
+            .submissions
+            .iter_mut()
+            .find(|sub| sub.submission_votes.submission_id == submission_id);
+        if let Some(submission) = submission {
+            if submission.voting_ended {
+                let all_accepted = submission
+                    .submission_votes
+                    .revealed_votes
+                    .values()
+                    .all(|vote| vote == "accept");
+                submission.accepted = Some(all_accepted);
+                if all_accepted {
+                    log_str("Submission accepted.");
+                } else {
+                    log_str("Submission rejected.");
                 }
             } else {
                 log_str("Voting has not ended yet.");
@@ -726,7 +754,10 @@ mod tests {
             "secret123".to_string(),
         );
         assert_eq!(
-            contract.submissions[0].submission_votes.comment_commits.len(),
+            contract.submissions[0]
+                .submission_votes
+                .comment_commits
+                .len(),
             1,
             "Comment should be committed successfully."
         );
@@ -890,25 +921,5 @@ Let me explain why:
 
 Example 1 showcases good alignment because the voter prioritizes relevant metrics like experience, clear communication, and genuine motivation. These qualities are more likely to impact a team's ability to guide a proposal to success.
 Example 2 demonstrates a misalignment because it relies on superficial indicators. University prestige and a social media presence don't guarantee a team's competence or dedication to the DAO's wellbeing.");
-    }
-}
-// Function to finalize the submission after all votes are revealed
-// This function checks if all reviewers voted to accept and sets the submission's accepted flag accordingly
-pub fn finalize_submission(&mut self, submission_id: u64) {
-    let submission = self.submissions.iter_mut().find(|sub| sub.submission_votes.submission_id == submission_id);
-    if let Some(submission) = submission {
-        if submission.voting_ended {
-            let all_accepted = submission.submission_votes.revealed_votes.values().all(|vote| vote == "accept");
-            submission.accepted = Some(all_accepted);
-            if all_accepted {
-                log_str("Submission accepted.");
-            } else {
-                log_str("Submission rejected.");
-            }
-        } else {
-            log_str("Voting has not ended yet.");
-        }
-    } else {
-        env::panic_str("Submission not found.");
     }
 }
