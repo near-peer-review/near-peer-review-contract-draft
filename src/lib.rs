@@ -161,6 +161,7 @@ impl Contract {
                 vote_commits: Vec::new(),
                 revealed_votes: HashMap::new(),
             },
+            voting_ended: false, // Explicitly initialize the voting_ended flag
         });
         log_str("Submission added successfully.");
         // } else {
