@@ -100,6 +100,13 @@ impl Contract {
         self.license = license;
     }
 
+    // Runs count_keywords_in_submission for each reviewer and returns their counts
+    pub fn count_keywords_for_all_reviewers(&self, data: String) -> Vec<(String, u32)> {
+        self.reviewers.iter().map(|reviewer| {
+            (reviewer.name.clone(), self.count_keywords_in_submission(data.clone(), reviewer.keywords.clone()))
+        }).collect()
+    }
+
     // Counts the number of keywords in a submission
     pub fn count_keywords_in_submission(&self, data: String, keywords: Vec<String>) -> u32 {
         keywords.iter().filter(|&keyword| data.contains(keyword)).count() as u32
