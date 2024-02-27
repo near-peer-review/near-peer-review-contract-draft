@@ -54,6 +54,37 @@ impl Contract {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use near_sdk::test_utils::{accounts, VMContextBuilder};
+    use near_sdk::{testing_env, VMContext};
+
+    fn get_context(is_owner: bool) -> VMContext {
+        let mut builder = VMContextBuilder::new();
+        if is_owner {
+            builder.current_account_id(accounts(0)).signer_account_id(accounts(0));
+        } else {
+            builder.current_account_id(accounts(0)).signer_account_id(accounts(1));
+        }
+        builder.build()
+    }
+
+    #[test]
+    fn add_author_success() {
+        let context = get_context(true);
+        testing_env!(context);
+        let mut contract = Contract::new();
+        contract.add_author("snotty-body.testnet".to_string());
+        assert_eq!(contract.authors.len(), 1);
+        assert_eq!(contract.authors[0], "snotty-body.testnet");
+    }
+
+    #[test]
+    fn add_author_only_owner() {
+        let context = get_context(false);
+        testing_env!(context);
+        let mut contract = Contract::new();
+        contract.add_author("dispensable-animal.testnet".to_string());
+        assert_eq!(contract.authors.len(), 0);
+    }
 
     #[test]
     fn get_default_greeting() {
