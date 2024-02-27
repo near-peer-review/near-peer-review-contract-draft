@@ -590,9 +590,19 @@ mod tests {
             "accept".to_string(),
             "secret123".to_string(),
         );
-        // End voting before revealing votes
+        // Simulate three reviewers committing their votes
+        for i in 1..4 {
+            contract.commit_vote(
+                0,
+                format!("reviewer{}.testnet", i),
+                "accept".to_string(),
+                "secret123".to_string(),
+            );
+        }
+        // End voting after all reviewers have committed their votes
         contract.end_voting(0);
         assert!(contract.submissions[0].voting_ended, "Voting should be marked as ended.");
+        // Now attempt to reveal a vote
         contract.reveal_vote(
             0,
             "reviewer1.testnet".to_string(),
