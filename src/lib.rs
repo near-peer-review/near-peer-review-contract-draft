@@ -1,5 +1,7 @@
 // Find all our documentation at https://docs.near.org
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
+use std::collections::BinaryHeap;
+use std::cmp::Reverse;
 use near_sdk::env::{self, log_str};
 use near_sdk::serde::{Deserialize, Serialize};
 
@@ -100,15 +102,18 @@ impl Contract {
         self.license = license;
     }
 
-    // Runs count_keywords_in_submission for each reviewer, sorts them by count in descending order, and returns the top 3
+    // Runs count_keywords_in_submission for each reviewer and returns the top 3 reviewers by count using a max-heap
     pub fn count_keywords_for_all_reviewers(&self, data: String) -> Vec<(String, u32)> {
-        let mut counts = self.reviewers.iter().map(|reviewer| {
-            (reviewer.name.clone(), self.count_keywords_in_submission(data.clone(), reviewer.keywords.clone()))
-        }).collect::<Vec<(String, u32)>>();
+        let mut heap = BinaryHeap::new();
+        for reviewer in &self.reviewers {
+            let count = self.count_keywords_in_submission(data.clone(), reviewer.keywords.clone());
+            heap.push(Reverse((count, reviewer.name.clone())));
+            if heap.len() > 3 {
+                heap.pop();
+            }
+        }
         
-        // Sort by count in descending order and take the top 3
-        counts.sort_by(|a, b| b.1.cmp(&a.1));
-        counts.into_iter().take(3).collect()
+        heap.into_iter().map(|Reverse((count, name))| (name, count)).collect()
     }
 
     // Counts the number of keywords in a submission
