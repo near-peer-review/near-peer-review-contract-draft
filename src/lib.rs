@@ -12,6 +12,14 @@ pub struct Reviewer {
 }
 use near_sdk::near_bindgen;
 
+#[derive(Clone, BorshDeserialize, BorshSerialize, Serialize, Deserialize, PartialEq, Debug)]
+#[serde(crate = "near_sdk::serde")]
+pub struct Submission {
+    author: String,
+    question: String,
+    response: String,
+}
+
 // Define the contract structure
 #[near_bindgen]
 #[derive(
@@ -22,6 +30,7 @@ pub struct Contract {
     license: String,
     authors: Vec<String>,
     reviewers: Vec<Reviewer>,
+    submissions: Vec<Submission>, // Added submissions vector
 }
 
 // Define the default, which automatically initializes the contract
@@ -89,6 +98,20 @@ impl Contract {
     pub fn set_license(&mut self, license: String) {
         log_str(&format!("Saving license: {license}"));
         self.license = license;
+    }
+
+    // Public method - allows an author to submit data
+    pub fn submit_data(&mut self, question: String, response: String) {
+        if self.authors.contains(&env::signer_account_id()) {
+            self.submissions.push(Submission {
+                author: env::signer_account_id(),
+                question,
+                response,
+            });
+            log_str("Submission added successfully.");
+        } else {
+            log_str("Only authors can submit data.");
+        }
     }
 }
 
