@@ -234,4 +234,22 @@ mod tests {
         let reviewer = contract.reviewers.iter().find(|r| r.name == "dao-expert.testnet");
         assert!(reviewer.is_none() || reviewer.unwrap().keywords.is_empty()); // Keywords should not be added or reviewer not found
     }
+
+    #[test]
+    fn submit_data_success() {
+        let context = get_context(true); // Simulate call by an author
+        testing_env!(context);
+        let mut contract = Contract::new();
+        contract.add_author("author.testnet".to_string()); // Add an author for testing
+        // Simulate the author submitting data
+        testing_env!(VMContextBuilder::new()
+            .current_account_id(accounts(0))
+            .signer_account_id("author.testnet".parse().unwrap())
+            .build());
+        contract.submit_data("Test data".to_string());
+        assert_eq!(contract.submissions.len(), 1); // Verify submission was added
+        assert_eq!(contract.submissions[0].author, "author.testnet");
+        assert_eq!(contract.submissions[0].response, "Test data");
+        assert_eq!(contract.submissions[0].question, "Original question not provided");
+    }
 }
