@@ -126,7 +126,7 @@ impl Contract {
     pub fn submit_data(&mut self, data: String) {
         if self.authors.contains(&env::signer_account_id().to_string()) {
             let top_reviewers = self.count_keywords_for_all_reviewers(data.clone());
-            let suggested_reviewers: Vec<String> = top_reviewers.into_iter().map(|(_, name)| name).collect();
+            let suggested_reviewers: Vec<String> = top_reviewers.into_iter().map(|(name, _)| name).collect();
             self.submissions.push(Submission {
                 author: env::signer_account_id().to_string(),
                 response: data,
