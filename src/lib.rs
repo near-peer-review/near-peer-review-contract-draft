@@ -167,9 +167,42 @@ mod tests {
     }
 
     #[test]
-    fn set_then_get_license() {
-        let mut contract = Contract::default();
-        contract.set_license("howdy".to_string());
-        assert_eq!(contract.get_license(), "howdy".to_string());
+    fn add_keywords_to_reviewer_success() {
+        let context = get_context(true);
+        testing_env!(context);
+        let mut contract = Contract::new();
+        contract.add_reviewer("dao-guru.testnet".to_string(), vec![]);
+        contract.add_keywords_to_reviewer(
+            "dao-guru.testnet".to_string(),
+            vec!["governance".to_string(), "voting".to_string(), "consensus".to_string()],
+        );
+        let reviewer = contract.reviewers.iter().find(|r| r.name == "dao-guru.testnet").unwrap();
+        assert_eq!(reviewer.keywords, vec!["governance", "voting", "consensus"]);
+    }
+
+    #[test]
+    fn add_keywords_to_reviewer_not_found() {
+        let context = get_context(true);
+        testing_env!(context);
+        let mut contract = Contract::new();
+        contract.add_keywords_to_reviewer(
+            "nonexistent-reviewer.testnet".to_string(),
+            vec!["governance".to_string()],
+        );
+        assert!(contract.reviewers.is_empty());
+    }
+
+    #[test]
+    fn add_keywords_to_reviewer_not_self() {
+        let context = get_context(false); // Simulate call by someone other than the reviewer
+        testing_env!(context);
+        let mut contract = Contract::new();
+        contract.add_reviewer("dao-expert.testnet".to_string(), vec![]);
+        contract.add_keywords_to_reviewer(
+            "dao-expert.testnet".to_string(),
+            vec!["decentralization".to_string()],
+        );
+        let reviewer = contract.reviewers.iter().find(|r| r.name == "dao-expert.testnet").unwrap();
+        assert!(reviewer.keywords.is_empty()); // Keywords should not be added
     }
 }
