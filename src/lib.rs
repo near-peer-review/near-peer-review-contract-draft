@@ -155,6 +155,11 @@ impl Contract {
                 author: env::signer_account_id().to_string(),
                 response: data,
                 suggested_reviewers, // Record the suggested reviewers based on keyword count
+                submission_votes: SubmissionVote {
+                    submission_id: 0, // Assuming a placeholder value; this should be updated according to your logic
+                    vote_commits: Vec::new(),
+                    revealed_votes: HashMap::new(),
+                },
             });
             log_str("Submission added successfully.");
         } else {
