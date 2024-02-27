@@ -277,6 +277,25 @@ mod tests {
     }
 
     #[test]
+    fn test_count_keywords_for_all_reviewers() {
+        let context = get_context(true);
+        testing_env!(context);
+        let mut contract = Contract::new();
+        contract.add_reviewer("reviewer1.testnet".to_string(), vec!["rust".to_string(), "smart contract".to_string()]);
+        contract.add_reviewer("reviewer2.testnet".to_string(), vec!["blockchain".to_string(), "web3".to_string()]);
+        contract.add_reviewer("reviewer3.testnet".to_string(), vec!["rust".to_string()]);
+        contract.add_reviewer("reviewer4.testnet".to_string(), vec!["smart contract".to_string(), "web3".to_string()]);
+
+        let data = "This submission talks about rust and smart contracts in the context of blockchain and web3.".to_string();
+        let top_reviewers = contract.count_keywords_for_all_reviewers(data);
+
+        assert_eq!(top_reviewers.len(), 3, "Should return top 3 reviewers");
+        assert!(top_reviewers.contains(&("reviewer1.testnet".to_string(), 2)), "reviewer1 should have 2 keywords found");
+        assert!(top_reviewers.contains(&("reviewer2.testnet".to_string(), 2)), "reviewer2 should have 2 keywords found");
+        assert!(top_reviewers.contains(&("reviewer4.testnet".to_string(), 2)), "reviewer4 should have 2 keywords found");
+    }
+
+    #[test]
     fn submit_data_success() {
         let context = get_context(true); // Simulate call by an author
         testing_env!(context);
