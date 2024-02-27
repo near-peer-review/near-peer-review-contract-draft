@@ -26,7 +26,7 @@ pub struct SubmissionVote {
     submission_id: u64,
     vote_commits: Vec<VoteCommit>,
     revealed_votes: HashMap<String, String>, // Maps reviewer names to their votes ("accept" or "reject")
-    comment_commits: Vec<CommentCommit>, // Holds commits for comments
+    comment_commits: Vec<CommentCommit>,     // Holds commits for comments
     revealed_comments: HashMap<String, String>, // Maps reviewer names to their comments
 }
 
@@ -169,6 +169,8 @@ impl Contract {
                 submission_id: 0, // Assuming a placeholder value; this should be updated according to your logic
                 vote_commits: Vec::new(),
                 revealed_votes: HashMap::new(),
+                comment_commits: Vec::new(),
+                revealed_comments: HashMap::new(),
             },
             voting_ended: false, // Explicitly initialize the voting_ended flag
         });
@@ -268,6 +270,76 @@ impl Contract {
                     }
                 } else {
                     log_str("Vote commit not found for reviewer.");
+                }
+            } else {
+                log_str("Voting has not ended yet.");
+            }
+        } else {
+            env::panic_str("Submission not found.");
+        }
+    }
+
+    // Function for reviewers to commit their comment on a submission
+    pub fn commit_comment(
+        &mut self,
+        submission_id: u64,
+        reviewer: String,
+        comment: String,
+        secret: String,
+    ) {
+        let combined = format!("{}{}", comment, secret);
+        let hash = Sha256::digest(combined.as_bytes());
+        let commit = format!("{:x}", hash);
+
+        if let Some(submission_vote) = self
+            .submissions
+            .iter_mut()
+            .find(|sub| sub.submission_votes.submission_id == submission_id)
+        {
+            submission_vote
+                .submission_votes
+                .comment_commits
+                .push(CommentCommit { reviewer, commit });
+            log_str("Comment committed successfully.");
+        } else {
+            env::panic_str("Submission not found.");
+        }
+    }
+    // Function for reviewers to reveal their comment on a submission
+    pub fn reveal_comment(
+        &mut self,
+        submission_id: u64,
+        reviewer: String,
+        comment: String,
+        secret: String,
+    ) {
+        let combined = format!("{}{}", comment, secret);
+        let hash = Sha256::digest(combined.as_bytes());
+        let commit = format!("{:x}", hash);
+
+        if let Some(submission) = self
+            .submissions
+            .iter_mut()
+            .find(|sub| sub.submission_votes.submission_id == submission_id)
+        {
+            if submission.voting_ended {
+                if let Some(comment_commit) = submission
+                    .submission_votes
+                    .comment_commits
+                    .iter()
+                    .find(|cc| cc.reviewer == reviewer)
+                {
+                    if comment_commit.commit == commit {
+                        submission
+                            .submission_votes
+                            .revealed_comments
+                            .insert(reviewer, comment);
+                        log_str("Comment revealed successfully.");
+                    } else {
+                        log_str("Comment reveal failed: Commit does not match.");
+                    }
+                } else {
+                    log_str("Comment commit not found for reviewer.");
                 }
             } else {
                 log_str("Voting has not ended yet.");
@@ -578,7 +650,10 @@ mod tests {
             .signer_account_id("author.testnet".parse().unwrap())
             .build());
         contract.end_voting(0);
-        assert!(contract.submissions[0].voting_ended, "Voting should be marked as ended.");
+        assert!(
+            contract.submissions[0].voting_ended,
+            "Voting should be marked as ended."
+        );
     }
 
     #[test]
@@ -610,7 +685,10 @@ mod tests {
         }
         // End voting after all reviewers have committed their votes
         contract.end_voting(0);
-        assert!(contract.submissions[0].voting_ended, "Voting should be marked as ended.");
+        assert!(
+            contract.submissions[0].voting_ended,
+            "Voting should be marked as ended."
+        );
         // Now attempt to reveal a vote
         contract.reveal_vote(
             0,
@@ -619,7 +697,10 @@ mod tests {
             "secret123".to_string(),
         );
         assert_eq!(
-            contract.submissions[0].submission_votes.revealed_votes.get("reviewer1.testnet"),
+            contract.submissions[0]
+                .submission_votes
+                .revealed_votes
+                .get("reviewer1.testnet"),
             Some(&"accept".to_string()),
             "Vote should be revealed successfully."
         );
@@ -662,7 +743,10 @@ mod tests {
         }
         // End voting after all reviewers have committed their votes
         contract.end_voting(0);
-        assert!(contract.submissions[0].voting_ended, "Voting should be marked as ended.");
+        assert!(
+            contract.submissions[0].voting_ended,
+            "Voting should be marked as ended."
+        );
         // Now attempt to reveal a vote
         contract.reveal_vote(
             0,
@@ -671,7 +755,11 @@ mod tests {
             "secret123".to_string(),
         );
         assert!(
-            contract.submissions[0].submission_votes.revealed_votes.get("reviewer1.testnet").is_none(),
+            contract.submissions[0]
+                .submission_votes
+                .revealed_votes
+                .get("reviewer1.testnet")
+                .is_none(),
             "Vote reveal should fail due to incorrect commit."
         );
     }
@@ -726,74 +814,5 @@ Let me explain why:
 
 Example 1 showcases good alignment because the voter prioritizes relevant metrics like experience, clear communication, and genuine motivation. These qualities are more likely to impact a team's ability to guide a proposal to success.
 Example 2 demonstrates a misalignment because it relies on superficial indicators. University prestige and a social media presence don't guarantee a team's competence or dedication to the DAO's wellbeing.");
-    }
-}
-// Function for reviewers to commit their comment on a submission
-pub fn commit_comment(
-    &mut self,
-    submission_id: u64,
-    reviewer: String,
-    comment: String,
-    secret: String,
-) {
-    let combined = format!("{}{}", comment, secret);
-    let hash = Sha256::digest(combined.as_bytes());
-    let commit = format!("{:x}", hash);
-
-    if let Some(submission_vote) = self
-        .submissions
-        .iter_mut()
-        .find(|sub| sub.submission_votes.submission_id == submission_id)
-    {
-        submission_vote
-            .submission_votes
-            .comment_commits
-            .push(CommentCommit { reviewer, commit });
-        log_str("Comment committed successfully.");
-    } else {
-        env::panic_str("Submission not found.");
-    }
-}
-// Function for reviewers to reveal their comment on a submission
-pub fn reveal_comment(
-    &mut self,
-    submission_id: u64,
-    reviewer: String,
-    comment: String,
-    secret: String,
-) {
-    let combined = format!("{}{}", comment, secret);
-    let hash = Sha256::digest(combined.as_bytes());
-    let commit = format!("{:x}", hash);
-
-    if let Some(submission) = self
-        .submissions
-        .iter_mut()
-        .find(|sub| sub.submission_votes.submission_id == submission_id)
-    {
-        if submission.voting_ended {
-            if let Some(comment_commit) = submission
-                .submission_votes
-                .comment_commits
-                .iter()
-                .find(|cc| cc.reviewer == reviewer)
-            {
-                if comment_commit.commit == commit {
-                    submission
-                        .submission_votes
-                        .revealed_comments
-                        .insert(reviewer, comment);
-                    log_str("Comment revealed successfully.");
-                } else {
-                    log_str("Comment reveal failed: Commit does not match.");
-                }
-            } else {
-                log_str("Comment commit not found for reviewer.");
-            }
-        } else {
-            log_str("Voting has not ended yet.");
-        }
-    } else {
-        env::panic_str("Submission not found.");
     }
 }
