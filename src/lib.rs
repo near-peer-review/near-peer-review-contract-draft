@@ -569,6 +569,80 @@ mod tests {
     }
 
     #[test]
+    fn reveal_vote_success() {
+        let mut context = get_context(true);
+        context.signer_account_id = "reviewer1.testnet".parse().unwrap();
+        testing_env!(context);
+        let mut contract = Contract::new();
+        contract.add_author("author.testnet".to_string());
+        testing_env!(VMContextBuilder::new()
+            .current_account_id(accounts(0))
+            .signer_account_id("author.testnet".parse().unwrap())
+            .build());
+        contract.submit_data("Test submission for reveal".to_string());
+        contract.commit_vote(
+            0,
+            "reviewer1.testnet".to_string(),
+            "accept".to_string(),
+            "secret123".to_string(),
+        );
+        contract.reveal_vote(
+            0,
+            "reviewer1.testnet".to_string(),
+            "accept".to_string(),
+            "secret123".to_string(),
+        );
+        assert_eq!(
+            contract.submissions[0].submission_votes.revealed_votes.get("reviewer1.testnet"),
+            Some(&"accept".to_string())
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "Submission not found.")]
+    fn reveal_vote_submission_not_found() {
+        let context = get_context(true);
+        testing_env!(context);
+        let mut contract = Contract::new();
+        contract.reveal_vote(
+            1, // Assuming no submission with this ID
+            "reviewer1.testnet".to_string(),
+            "accept".to_string(),
+            "secret123".to_string(),
+        );
+    }
+
+    #[test]
+    fn reveal_vote_incorrect_commit() {
+        let mut context = get_context(true);
+        context.signer_account_id = "reviewer1.testnet".parse().unwrap();
+        testing_env!(context);
+        let mut contract = Contract::new();
+        contract.add_author("author.testnet".to_string());
+        testing_env!(VMContextBuilder::new()
+            .current_account_id(accounts(0))
+            .signer_account_id("author.testnet".parse().unwrap())
+            .build());
+        contract.submit_data("Test submission for incorrect reveal".to_string());
+        contract.commit_vote(
+            0,
+            "reviewer1.testnet".to_string(),
+            "accept".to_string(),
+            "secret123".to_string(),
+        );
+        contract.reveal_vote(
+            0,
+            "reviewer1.testnet".to_string(),
+            "reject".to_string(), // Incorrect vote compared to commit
+            "secret123".to_string(),
+        );
+        assert!(
+            contract.submissions[0].submission_votes.revealed_votes.get("reviewer1.testnet").is_none(),
+            "Vote reveal should fail due to incorrect commit."
+        );
+    }
+
+    #[test]
 
     fn submit_data_success() {
         let context = get_context(true); // Simulate call by an author
