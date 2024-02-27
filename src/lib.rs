@@ -2,24 +2,24 @@
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::env::{self, log_str};
 use near_sdk::serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::cmp::Reverse;
- use std::collections::{BinaryHeap, HashMap};
- use sha2::{Sha256, Digest};
+use std::collections::{BinaryHeap, HashMap};
 
 #[derive(Clone, BorshDeserialize, BorshSerialize, Serialize, Deserialize, PartialEq, Debug)]
- #[serde(crate = "near_sdk::serde")]
- pub struct VoteCommit {
-     reviewer: String,
-     commit: String, // Hash of the vote
- }
+#[serde(crate = "near_sdk::serde")]
+pub struct VoteCommit {
+    reviewer: String,
+    commit: String, // Hash of the vote
+}
 
 #[derive(Clone, BorshDeserialize, BorshSerialize, Serialize, Deserialize, PartialEq, Debug)]
- #[serde(crate = "near_sdk::serde")]
- pub struct SubmissionVote {
-     submission_id: u64,
-     vote_commits: Vec<VoteCommit>,
-     revealed_votes: HashMap<String, String>, // Maps reviewer names to their votes ("accept" or "reject")
- }
+#[serde(crate = "near_sdk::serde")]
+pub struct SubmissionVote {
+    submission_id: u64,
+    vote_commits: Vec<VoteCommit>,
+    revealed_votes: HashMap<String, String>, // Maps reviewer names to their votes ("accept" or "reject")
+}
 
 // Define the Reviewer structure
 #[derive(Clone, BorshDeserialize, BorshSerialize, Serialize, Deserialize, PartialEq, Debug)]
@@ -50,7 +50,7 @@ pub struct Contract {
     authors: Vec<String>,
     reviewers: Vec<Reviewer>,
     submissions: Vec<Submission>, // Added submissions vector
-    // submission_votes: Vec<SubmissionVote>, // Added to store votes on submissions
+                                  // submission_votes: Vec<SubmissionVote>, // Added to store votes on submissions
 }
 
 // Define the default, which automatically initializes the contract
@@ -84,10 +84,10 @@ impl Contract {
     // Public method - adds an author if called by the owner
     pub fn add_author(&mut self, author: String) {
         // if env::signer_account_id() == env::current_account_id() {
-            self.authors.push(author);
-            log_str("Author added successfully.");
+        self.authors.push(author);
+        log_str("Author added successfully.");
         // } else {
-            // log_str("Only the contract owner can add authors.");
+        // log_str("Only the contract owner can add authors.");
         // }
     }
 
@@ -95,10 +95,10 @@ impl Contract {
     // Updated to accept a reviewer name and keywords
     pub fn add_reviewer(&mut self, name: String, keywords: Vec<String>) {
         // if env::signer_account_id() == env::current_account_id() {
-            self.reviewers.push(Reviewer { name, keywords });
-            log_str("Reviewer added successfully.");
+        self.reviewers.push(Reviewer { name, keywords });
+        log_str("Reviewer added successfully.");
         // } else {
-            // log_str("Only the contract owner can add reviewers.");
+        // log_str("Only the contract owner can add reviewers.");
         // }
     }
 
@@ -164,6 +164,33 @@ impl Contract {
             log_str("Submission added successfully.");
         } else {
             log_str("Only authors can submit data.");
+        }
+    }
+
+    // Function for reviewers to commit their vote on a submission
+    pub fn commit_vote(
+        &mut self,
+        submission_id: u64,
+        reviewer: String,
+        vote: String,
+        secret: String,
+    ) {
+        let combined = format!("{}{}", vote, secret);
+        let hash = Sha256::digest(combined.as_bytes());
+        let commit = format!("{:x}", hash);
+
+        if let Some(submission_vote) = self
+            .submissions
+            .iter_mut()
+            .find(|sub| sub.submission_votes.submission_id == submission_id)
+        {
+            submission_vote
+                .submission_votes
+                .vote_commits
+                .push(VoteCommit { reviewer, commit });
+            log_str("Vote committed successfully.");
+        } else {
+            log_str("Submission not found.");
         }
     }
 }
@@ -422,19 +449,3 @@ Example 1 showcases good alignment because the voter prioritizes relevant metric
 Example 2 demonstrates a misalignment because it relies on superficial indicators. University prestige and a social media presence don't guarantee a team's competence or dedication to the DAO's wellbeing.");
     }
 }
-    // Function for reviewers to commit their vote on a submission
-    pub fn commit_vote(&mut self, submission_id: u64, reviewer: String, vote: String, secret: String) {
-        let combined = format!("{}{}", vote, secret);
-        let hash = Sha256::digest(combined.as_bytes());
-        let commit = format!("{:x}", hash);
-
-        if let Some(submission_vote) = self.submissions.iter_mut().find(|sub| sub.submission_votes.submission_id == submission_id) {
-            submission_vote.submission_votes.vote_commits.push(VoteCommit {
-                reviewer,
-                commit,
-            });
-            log_str("Vote committed successfully.");
-        } else {
-            log_str("Submission not found.");
-        }
-    }
